@@ -14,7 +14,7 @@ const int cellsize = 30;
 const int numberofcells = 25;
 const int offset = 75;
 Music bg;
-Sound eat, hit;
+Sound eat, hit, button;
 Color green = {173, 204, 96, 255};
 Color darkgreen = {0, 100, 0, 255};
 Color aiBackground = {70, 130, 180, 255};
@@ -44,6 +44,8 @@ int growthFoodCount = 0;
 int shrinkFoodCount = 0;
 int negativeFoodCount = 0;
 int highScore = 0;
+bool paused = false;
+double gameStartTime = 0.0;
 
 int loadHighScore(const string &filename) // ZAHRA
 {
@@ -453,18 +455,20 @@ public:
         negative2.position = negative2.GenerateRandomPos(snake.body);
         running = true;
         gameOverScreen = false;
+        gameStartTime = GetTime();
     }
 };
 
 int main() // ALL
 {
     InitWindow(2 * offset + cellsize * numberofcells, 2 * offset + cellsize * numberofcells, "Snake AI Game");
-    SetTargetFPS(60);
-    highScore = loadHighScore("highscore.txt"); // default fps if user doesnt select
+    SetTargetFPS(60); // default fps
+    highScore = loadHighScore("highscore.txt");
     Game game;
     float updateInterval = 0.2f;
     InitAudioDevice();
-    bg = LoadMusicStream("Sounds/bg1.ogg");
+    button = LoadSound("Sounds/button.mp3");
+    bg = LoadMusicStream("Sounds/wsa.mp3");
     eat = LoadSound("Sounds/eat.mp3");
     hit = LoadSound("Sounds/wall.mp3");
     PlayMusicStream(bg);
@@ -475,8 +479,19 @@ int main() // ALL
     while (!WindowShouldClose())
     {
         UpdateMusicStream(bg);
+        if (IsKeyPressed(KEY_P))
+        {
+            paused = !paused;
+        }
+        double elapsed = 0.0;
+        if (!menuScreen && !gameOverScreen)
+        {
+            if (!paused)
+            {
+                elapsed = GetTime() - gameStartTime;
+            }
+        }
         BeginDrawing();
-
         if (aiMode)
             ClearBackground(aiBackground); // Change to AI background color
         else
@@ -505,24 +520,33 @@ int main() // ALL
             {
                 if (CheckCollisionPointRec(mouseposition, easybutton))
                 {
+                    PlaySound(button);
                     SetTargetFPS(60);
                     updateInterval = 0.2f;
                     buttonClicked = true;
                     menuScreen = false;
+                    lastupdatetime = GetTime();
+                    gameStartTime = GetTime();
                 }
                 if (CheckCollisionPointRec(mouseposition, mediumbutton))
                 {
+                    PlaySound(button);
                     SetTargetFPS(120);
                     updateInterval = 0.1f;
                     buttonClicked = true;
                     menuScreen = false;
+                    lastupdatetime = GetTime();
+                    gameStartTime = GetTime();
                 }
                 if (CheckCollisionPointRec(mouseposition, hardbutton))
                 {
+                    PlaySound(button);
                     SetTargetFPS(180);
                     updateInterval = 0.05f;
                     buttonClicked = true;
                     menuScreen = false;
+                    lastupdatetime = GetTime();
+                    gameStartTime = GetTime();
                 }
             }
             if (IsKeyPressed(KEY_ENTER) && !buttonClicked)
@@ -536,8 +560,13 @@ int main() // ALL
             DrawText(TextFormat("High Score: %i", highScore),
                      (GetScreenWidth() - MeasureText(TextFormat("High Score: %i", highScore), 25)) / 2,
                      offset + 180, 25, DARKGREEN);
-            DrawText("Press R to Restart or ESC to Exit",
-                     (GetScreenWidth() - MeasureText("Press R to Restart or ESC to Exit", 25)) / 2, offset + 230, 25, DARKGRAY);
+            DrawText(TextFormat("Growth Foods Eaten: %i", growthFoodCount),
+                     (GetScreenWidth() - MeasureText(TextFormat("Growth Foods Eaten: %i", growthFoodCount), 25)) / 2, offset + 220, 25, BLUE);
+            DrawText(TextFormat("Shrink Foods Eaten: %i", shrinkFoodCount),
+                     (GetScreenWidth() - MeasureText(TextFormat("Shrink Foods Eaten: %i", shrinkFoodCount), 25)) / 2, offset + 255, 25, ORANGE);
+            DrawText(TextFormat("Negative Foods Eaten: %i", negativeFoodCount),
+                     (GetScreenWidth() - MeasureText(TextFormat("Negative Foods Eaten: %i", negativeFoodCount), 25)) / 2, offset + 290, 25, RED);
+            DrawText("Press R to Restart or ESC to Exit", (GetScreenWidth() - MeasureText("Press R to Restart or ESC to Exit", 25)) / 2, offset + 350, 25, DARKGRAY);
             if (IsKeyPressed(KEY_R))
             {
                 game.Restart();
@@ -547,7 +576,7 @@ int main() // ALL
         }
         else
         {
-            if (eventtriggered(updateInterval))
+            if (!paused && eventtriggered(updateInterval))
             {
                 if (aiMode)
                 {
@@ -582,7 +611,7 @@ int main() // ALL
                 game.Update();
             }
 
-            if (!aiMode)
+            if (!paused && !aiMode)
             {
                 if (IsKeyPressed(KEY_UP) && game.snake.direction.y != 1)
                     game.snake.direction = {0, -1};
@@ -597,16 +626,26 @@ int main() // ALL
             if (IsKeyPressed(KEY_SPACE))
                 aiMode = !aiMode;
 
+            DrawText(TextFormat("Time: %.1f s", elapsed), offset, 20, 20, DARKGRAY);
             DrawRectangleLinesEx(Rectangle{(float)offset - 5, (float)offset - 5, numberofcells * cellsize + 10, numberofcells * cellsize + 10}, 5, darkgreen);
             DrawText(TextFormat("Score: %i", game.score), offset, offset + numberofcells * cellsize + 10, 25, BLACK);
-            DrawText(TextFormat("Growth: %i | Shrink: %i | Negative: %i", growthFoodCount, shrinkFoodCount, negativeFoodCount),
+            DrawText(TextFormat("Growth: %i | Shrink: %i | Negative: %i   Press P to pause", growthFoodCount, shrinkFoodCount, negativeFoodCount),
                      offset + 250, offset + numberofcells * cellsize + 10, 20, DARKGRAY);
             DrawText(aiMode ? "Mode: AI (SPACE to switch)" : "Mode: Manual (SPACE to switch)", offset + 300, 20, 20, DARKGRAY);
             game.Draw();
         }
+        if (paused)
+        {
+            DrawRectangle(0, 0, screenWidth, screenHeight, Fade(BLACK, 0.6f));
+            int w = MeasureText("PAUSED", 40);
+            DrawText("PAUSED", screenWidth / 2 - w / 2, screenHeight / 2 - 40 / 2, 40, RED);
+            DrawText("Press P to resume", screenWidth / 2 - MeasureText("Press P to resume", 20) / 2,
+                     screenHeight / 2 + 40, 20, LIGHTGRAY);
+        }
 
         EndDrawing();
     }
+    UnloadSound(button);
     UnloadSound(eat);
     UnloadSound(hit);
     UnloadMusicStream(bg);
