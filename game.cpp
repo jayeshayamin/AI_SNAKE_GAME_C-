@@ -13,7 +13,8 @@ using namespace std;
 const int cellsize = 30;
 const int numberofcells = 25;
 const int offset = 75;
-
+Music bg;
+Sound eat, hit;
 Color green = {173, 204, 96, 255};
 Color darkgreen = {0, 100, 0, 255};
 Color aiBackground = {70, 130, 180, 255};
@@ -25,14 +26,14 @@ float powerUpTimer = 0;
 const float powerUpDuration = 5.0f;
 Vector2 powerUpPosition;
 
-const int btnWidth = 200;
+const int btnWidth = 200; // JAYESHA
 const int btnHeight = 50;
 const int btnX = screenWidth / 2 - btnWidth / 2;
 bool buttonClicked = false;
 
 Rectangle easybutton = {btnX, 250, btnWidth, btnHeight};
 Rectangle mediumbutton = {btnX, 320, btnWidth, btnHeight};
-Rectangle hardbutton = {btnX, 390, btnWidth, btnHeight};
+Rectangle hardbutton = {btnX, 390, btnWidth, btnHeight}; // JAYESHA
 
 bool menuScreen = true;
 bool gameOverScreen = false;
@@ -44,7 +45,7 @@ int shrinkFoodCount = 0;
 int negativeFoodCount = 0;
 int highScore = 0;
 
-int loadHighScore(const string &filename)
+int loadHighScore(const string &filename) // ZAHRA
 {
     ifstream file(filename);
     int score = 0;
@@ -55,7 +56,7 @@ int loadHighScore(const string &filename)
     }
     return score;
 }
-void saveHighScore(const string &filename, int score)
+void saveHighScore(const string &filename, int score) // ZAHRA
 {
     ofstream file(filename);
     if (file.is_open())
@@ -64,7 +65,7 @@ void saveHighScore(const string &filename, int score)
         file.close();
     }
 }
-bool ElementInDeque(Vector2 val, const deque<Vector2> &dq)
+bool ElementInDeque(Vector2 val, const deque<Vector2> &dq) // JAYESHA
 {
     for (const auto &el : dq)
         if (Vector2Equals(val, el))
@@ -72,7 +73,7 @@ bool ElementInDeque(Vector2 val, const deque<Vector2> &dq)
     return false;
 }
 
-bool eventtriggered(double interval)
+bool eventtriggered(double interval) // JAYESHA
 {
     double currenttime = GetTime();
     if (currenttime - lastupdatetime >= interval)
@@ -83,7 +84,7 @@ bool eventtriggered(double interval)
     return false;
 }
 
-struct Node
+struct Node // UMAIMA
 {
     Vector2 position;
     float gCost = 0, hCost = 0, fCost = 0;
@@ -95,14 +96,14 @@ float Heuristic(Vector2 a, Vector2 b)
     return abs(a.x - b.x) + abs(a.y - b.y);
 }
 
-bool IsCellWalkable(Vector2 cell, const deque<Vector2> &snake)
+bool IsCellWalkable(Vector2 cell, const deque<Vector2> &snake) // JAYESHA
 {
     if (cell.x < 0 || cell.x >= numberofcells || cell.y < 0 || cell.y >= numberofcells)
         return false;
     return !ElementInDeque(cell, snake);
 }
 
-vector<Vector2> AStar(Vector2 start, Vector2 goal, const deque<Vector2> &snake)
+vector<Vector2> AStar(Vector2 start, Vector2 goal, const deque<Vector2> &snake) // UMAIMA
 {
     vector<Vector2> path;
     auto cmp = [](Node *a, Node *b)
@@ -161,7 +162,7 @@ vector<Vector2> AStar(Vector2 start, Vector2 goal, const deque<Vector2> &snake)
     return path;
 }
 
-class Snake
+class Snake // JAYESHA
 {
 public:
     deque<Vector2> body = {{4, 23}, {3, 23}, {2, 23}};
@@ -193,7 +194,7 @@ public:
     }
 };
 
-class Food
+class Food // JAYESHA
 {
 public:
     Vector2 position;
@@ -226,14 +227,14 @@ public:
     }
 };
 
-class GrowthFood : public Food
+class GrowthFood : public Food // UMAIMA
 {
 public:
     GrowthFood(deque<Vector2> &snake) : Food(snake, "Graphics/growth.png") {}
     void Apply(Snake &s) { s.addbody = true; }
 };
 
-class ShrinkFood : public Food
+class ShrinkFood : public Food // UMAIMA
 {
 public:
     ShrinkFood(deque<Vector2> &snake) : Food(snake, "Graphics/shrink.png") {}
@@ -246,13 +247,13 @@ public:
     }
 };
 
-class NegativeFood : public Food
+class NegativeFood : public Food // UMAIMA
 {
 public:
     NegativeFood(deque<Vector2> &snake) : Food(snake, "Graphics/negative.png") {}
 };
 
-class PowerUpFood
+class PowerUpFood // UMAIMA
 {
 public:
     Vector2 position;
@@ -306,7 +307,7 @@ public:
         }
     }
 
-    bool CheckCollision(Vector2 snakeHead)
+    bool CheckCollision(Vector2 snakeHead) // JAYESHA,UMAIMA
     {
         if (isActive && Vector2Equals(position, snakeHead))
         {
@@ -327,28 +328,21 @@ public:
     NegativeFood negative1, negative2;
     int score = 0;
     bool running = true;
-    Sound eat, hit;
     PowerUpFood powerUp;
 
-    Game() : food(snake.body, "Graphics/food.png"),
+    Game() : food(snake.body, "Graphics/food.png"), // JAYESHA
              growth(snake.body),
              shrink(snake.body),
              negative1(snake.body),
              negative2(snake.body)
     {
-        InitAudioDevice();
-        eat = LoadSound("Sounds/eat.mp3");
-        hit = LoadSound("Sounds/wall.mp3");
     }
 
     ~Game()
     {
-        UnloadSound(eat);
-        UnloadSound(hit);
-        CloseAudioDevice();
     }
 
-    void Draw()
+    void Draw() // JAYESHA
     {
         food.Draw();
         growth.Draw();
@@ -359,7 +353,7 @@ public:
         powerUp.Draw();
     }
 
-    void Update()
+    void Update() // ALL
     {
 
         if (!running)
@@ -446,7 +440,7 @@ public:
         }
     }
 
-    void Restart()
+    void Restart() // ALL
     {
         buttonClicked = false;
         score = 0;
@@ -462,16 +456,27 @@ public:
     }
 };
 
-int main()
+int main() // ALL
 {
     InitWindow(2 * offset + cellsize * numberofcells, 2 * offset + cellsize * numberofcells, "Snake AI Game");
     SetTargetFPS(60);
     highScore = loadHighScore("highscore.txt"); // default fps if user doesnt select
     Game game;
     float updateInterval = 0.2f;
+    InitAudioDevice();
+    bg = LoadMusicStream("Sounds/bg1.ogg");
+    eat = LoadSound("Sounds/eat.mp3");
+    hit = LoadSound("Sounds/wall.mp3");
+    PlayMusicStream(bg);
+    SetMusicVolume(bg, 0.7f);
+    SetSoundVolume(eat, 1.0f);
+    SetSoundVolume(hit, 1.0f);
+
     while (!WindowShouldClose())
     {
+        UpdateMusicStream(bg);
         BeginDrawing();
+
         if (aiMode)
             ClearBackground(aiBackground); // Change to AI background color
         else
@@ -602,7 +607,10 @@ int main()
 
         EndDrawing();
     }
-
+    UnloadSound(eat);
+    UnloadSound(hit);
+    UnloadMusicStream(bg);
+    CloseAudioDevice();
     CloseWindow();
     return 0;
 }
