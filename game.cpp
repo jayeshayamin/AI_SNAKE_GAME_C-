@@ -446,6 +446,7 @@ public:
     {
         buttonClicked = false;
         score = 0;
+        aiMode = false;
         growthFoodCount = shrinkFoodCount = negativeFoodCount = 0;
         snake.Reset();
         food.position = food.GenerateRandomPos(snake.body);
@@ -468,7 +469,7 @@ int main() // ALL
     float updateInterval = 0.2f;
     InitAudioDevice();
     button = LoadSound("Sounds/button.mp3");
-    bg = LoadMusicStream("Sounds/wsa.mp3");
+    bg = LoadMusicStream("Sounds/bg2.ogg");
     eat = LoadSound("Sounds/eat.mp3");
     hit = LoadSound("Sounds/wall.mp3");
     PlayMusicStream(bg);
@@ -516,9 +517,9 @@ int main() // ALL
             DrawText("Hard", hardbutton.x + 70, hardbutton.y + 15, 20, BLACK);
 
             Vector2 mouseposition = GetMousePosition();
-            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+            if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT) || IsKeyPressed(KEY_ENTER))
             {
-                if (CheckCollisionPointRec(mouseposition, easybutton))
+                if (CheckCollisionPointRec(mouseposition, easybutton) || IsKeyPressed(KEY_ENTER))
                 {
                     PlaySound(button);
                     SetTargetFPS(60);
@@ -548,9 +549,16 @@ int main() // ALL
                     lastupdatetime = GetTime();
                     gameStartTime = GetTime();
                 }
+                if (IsKeyPressed(KEY_ENTER))
+                {
+                    menuScreen = false;
+                    updateInterval = 0.2f;
+                }
             }
             if (IsKeyPressed(KEY_ENTER) && !buttonClicked)
+            {
                 menuScreen = false;
+            }
         }
         else if (gameOverScreen)
         {
